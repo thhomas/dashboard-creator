@@ -5,10 +5,13 @@ import { useDropzone } from 'react-dropzone'
 
 import styles from './styles.module.css'
 
-const UploadDropzone = () => {
+type ErrorReports = {
+  [filename: string]: string[];
+};
 
+const UploadDropzone = () => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [errorFiles, setErrorFiles] = useState<string[]>([]);
+  const [errorFiles, setErrorFiles] = useState<ErrorReports>({});
 
   const { acceptedFiles, fileRejections, getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -16,6 +19,7 @@ const UploadDropzone = () => {
       'application/json': ['.json'],
     },
     onDropAccepted: files => {
+      // define errors as array of string
       files.forEach(async file => {
         try {
           // Upload file to server using upload API
@@ -30,17 +34,45 @@ const UploadDropzone = () => {
           // parse message
           const data = await res.json();
 
-          if (!data || !data.success) {
-            // Error parsing file content: add erroneous file to list
-            setErrorFiles(errorFiles => [...errorFiles, file.name]);
-          } else {
+          if (!data || (!data.success && !data.error)) {
+            // Server error (unknown)
+            setErrorFiles((prevErrorFiles) => ({
+              ...prevErrorFiles,
+              [file.name]: ['Could not process files (server error).']
+            }));
+          } else if (data.success) {
             // Success: add to list of successfully uploaded files
             setUploadedFiles(uploadedFiles => [...uploadedFiles, file.name]);
-          }
+            // Remove entry from errorFiles if one exists for file.name
+            const newErrorState = { ...errorFiles };
+            if (newErrorState.hasOwnProperty(file.name)) {
+              // Remove the entry with the specified filename
+              delete newErrorState[file.name];
+              setErrorFiles(newErrorState);
+            }
 
+          } else {
+            // Error parsing file content: add erroneous file to list
+            let errors: string[] = [];
+            errors.push(data.error);
+            // Add error messages from full report
+            if (data.report) {
+              for (const i in data.report) {
+                errors.push(data.report[i])
+              }
+            }
+            // report error files
+            setErrorFiles((prevErrorFiles) => ({
+              ...prevErrorFiles,
+              [file.name]: errors
+            }));
+          }
         } catch (error) {
           // Error uploading file: add erroneous file to list
-          setErrorFiles(errorFiles => [...errorFiles, file.name]);
+          setErrorFiles((prevErrorFiles) => ({
+            ...prevErrorFiles,
+            [file.name]: ['Could not process files (client error).']
+          }));
         }
       });
     }
@@ -55,11 +87,20 @@ const UploadDropzone = () => {
       {acceptedFiles.length > 0 || fileRejections.length > 0 ? (
         <div id={styles.acceptedfiles} className="mt-4">
           <h4>Upload status</h4>
-          <ul>
+          <ul className={styles.filelist}>
             {acceptedFiles.map(file => (
-              <li key={file.name} className={`${uploadedFiles.indexOf(file.name) !== -1 ? styles.uploaded : errorFiles.includes(file.name) ? styles.erroneous : styles.uploading}`}>
-                {file.name}
-                {errorFiles.includes(file.name) ? <small> - Invalid config file</small> : null}
+              <li key={file.name}
+                className={`${uploadedFiles.indexOf(file.name) !== -1 ? styles.uploaded : errorFiles[file.name] ? styles.erroneous : styles.uploading}`}>
+                <div>
+                  {file.name}
+                  {
+                    errorFiles[file.name] ? (
+                      errorFiles[file.name].map((error, idx) => (
+                        <div key={idx} className="small">{idx ? '- ' : ''}{error}</div>
+                      ))
+                    ) : null
+                  }
+                </div>
               </li>
             ))}
             {fileRejections.map(item => (

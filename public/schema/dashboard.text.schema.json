@@ -1,11 +1,17 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "dashboard.text.schema.json",
-    "type": ["string", "object"],
+    "type": [
+        "string",
+        "object"
+    ],
     "properties": {
         "text": {
             "description": "The text expressed in different languages. Can be a string (using 'en' as default lang) or an object with language keys.",
-            "type": ["object", "string"],
+            "type": [
+                "object",
+                "string"
+            ],
             "propertyNames": {
                 "pattern": "[a-z][a-z]"
             }

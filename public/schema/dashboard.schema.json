@@ -75,7 +75,22 @@
                                     "description": "The color scheme of the chart in case of map",
                                     "type": "string",
                                     "enum": [
-                                        "Blues", "BrBg", "Greens", "Greys", "Oranges", "PRGn", "PiYG", "PuOr", "Purples", "RdGy", "RdYlBu", "RdYlGn", "Reds", "Spectral", "Turbo", "Viridis"
+                                        "Blues",
+                                        "BrBg",
+                                        "Greens",
+                                        "Greys",
+                                        "Oranges",
+                                        "PRGn",
+                                        "PiYG",
+                                        "PuOr",
+                                        "Purples",
+                                        "RdGy",
+                                        "RdYlBu",
+                                        "RdYlGn",
+                                        "Reds",
+                                        "Spectral",
+                                        "Turbo",
+                                        "Viridis"
                                     ]
                                 },
                                 "type": {
@@ -207,13 +222,19 @@
                             "if": {
                                 "not": {
                                     "properties": {
-                                        "type": { "const": "note" }
+                                        "type": {
+                                            "const": "note"
+                                        }
                                     },
-                                    "required": ["type"]
+                                    "required": [
+                                        "type"
+                                    ]
                                 }
                             },
                             "then": {
-                                "required" : ["data"]
+                                "required": [
+                                    "data"
+                                ]
                             }
                         }
                     }
